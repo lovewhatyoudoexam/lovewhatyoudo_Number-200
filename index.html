@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>可愛有聲數感學習單 (響應式進位挑戰版)</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Varela+Round&family=Noto+Sans+TC:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Varela Round', 'Noto Sans TC', sans-serif;
+            background-color: #FFF5E1; /* 溫暖的米黃色背景 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px; /* 稍微減少外部 padding */
+            margin: 0;
+            color: #5D4037;
+        }
+
+        /* 設定面板樣式 */
+        .settings-panel {
+            background-color: #FFECB3;
+            padding: 15px 25px; /* 稍微減少 padding */
+            border-radius: 20px;
+            border: 3px solid #FFCC80;
+            margin-bottom: 25px; /* 稍微減少 margin */
+            display: flex;
+            gap: 15px; /* 稍微減少間距 */
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .input-group label {
+            font-weight: bold;
+            color: #8D6E63;
+            font-size: 13px; /* 稍微縮小字體 */
+        }
+
+        input[type="number"] {
+            padding: 8px; /* 稍微縮小 padding */
+            border-radius: 8px;
+            border: 2px solid #FFCC80;
+            font-size: 16px; /* 稍微縮小字體 */
+            width: 70px; /* 稍微縮小寬度 */
+            text-align: center;
+            font-family: inherit;
+            color: #5D4037;
+        }
+
+        /* 主要紙張容器 - A4 比例優化和響應式調整 */
+        .paper-container {
+            background-color: white;
+            padding: 40px 30px; /* 調整 padding */
+            border-radius: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            width: 95%; /* 讓容器佔滿更多可用寬度 */
+            max-width: 960px; /* 增加最大寬度 */
+            text-align: center;
+            border: 4px dashed #FFCC80;
+            position: relative;
+            box-sizing: border-box;
+        }
+
+        /* 可愛裝飾 */
+        .deco {
+            position: absolute;
+            font-size: 2.5rem; /* 稍微縮小字體 */
+            z-index: 1;
+            pointer-events: none;
+        }
+        .deco-1 { top: -20px; left: -20px; transform: rotate(-20deg); }
+        .deco-2 { top: -20px; right: -20px; transform: rotate(20deg); }
+        .deco-3 { bottom: -10px; left: 15px; font-size: 1.8rem;} /* 稍微縮小字體 */
+        .deco-4 { bottom: -10px; right: 15px; font-size: 1.8rem;} /* 稍微縮小字體 */
+
+        h1 {
+            color: #FF8A65;
+            margin: 0 0 12px 0; /* 調整 margin */
+            font-size: 28px; /* 調整字體大小 */
+            letter-spacing: 2px;
+        }
+
+        p.instruction {
+            color: #8D6E63;
+            margin-bottom: 25px; /* 調整 margin */
+            font-size: 16px; /* 調整字體大小 */
+        }
+
+        /* 學生資料欄 */
+        .student-info {
+            display: flex;
+            justify-content: center;
+            gap: 40px; /* 調整間距 */
+            margin-bottom: 35px; /* 調整 margin */
+            font-size: 18px; /* 調整字體大小 */
+            color: #5D4037;
+        }
+        .student-info span {
+            border-bottom: 2px solid #FFCC80;
+            padding-bottom: 4px;
+            min-width: 160px;
+            display: inline-block;
+        }
+
+        /* 表格網格設定 - 確保一行10格的響應式設計 */
+        .grid-wrapper {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr); /* 核心：永遠是10等份 */
+            gap: 10px; /* 調整間距 */
+            margin: 0 auto;
+            background-color: #FFF8E1;
+            padding: 20px; /* 調整 padding */
+            border-radius: 20px;
+            width: calc(100% - 40px); /* 讓 grid-wrapper 佔滿 paper-container 寬度，減去 padding */
+            box-sizing: border-box;
+            max-width: 900px; /* 設置一個最大寬度，避免過大 */
+        }
+
+        .cell {
+            /* 讓格子高度與寬度相等，響應式調整 */
+            aspect-ratio: 1 / 1; 
+            min-width: 40px; /* 最小寬度，避免在極小螢幕下過於壓縮 */
+            min-height: 40px; /* 最小高度 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px; /* 調整字體大小 */
+            border-radius: 12px;
+            position: relative;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: transform 0.1s, background-color 0.2s;
+            user-select: none;
+        }
+
+        .cell:active { transform: scale(0.95); }
+
+        .cell.speaking {
+            box-shadow: 0 0 12px #FF8A65; /* 調整陰影大小 */
+            border-color: #FF8A65 !important;
+            z-index: 2;
+        }
+
+        /* 填好的數字樣式 (題目) */
+        .cell.filled {
+            background-color: #C5E1A5;
+            color: #33691E;
+            font-weight: bold;
+            border: 2px solid #AED581; /* 調整邊框寬度 */
+        }
+
+        /* 挖空格子樣式 (讓學生填) */
+        .cell.empty {
+            background-color: #FFFFFF;
+            border: 2px dashed #FFAB91; /* 調整邊框寬度 */
+        }
+        
+        /* 控制按鈕區 */
+        .controls {
+            margin-top: 30px; /* 調整 margin */
+            display: flex;
+            gap: 20px; /* 調整間距 */
+            justify-content: center;
+            padding-bottom: 20px; /* 調整 padding */
+        }
+
+        button {
+            padding: 10px 20px; /* 調整 padding */
+            font-size: 16px; /* 調整字體大小 */
+            border-radius: 40px; /* 調整圓角 */
+            box-shadow: 0 3px #ccc; /* 調整陰影 */
+        }
+        button:active { box-shadow: 0 1px #999; transform: translateY(1px); }
+
+        .btn-update { background-color: #FFB74D; color: white; }
+        .btn-update:hover { background-color: #FFA726; }
+        .btn-regen { background-color: #4DB6AC; color: white; }
+        .btn-regen:hover { background-color: #26A69A; }
+        .btn-print { background-color: #FF8A65; color: white; }
+        .btn-print:hover { background-color: #F4511E; }
+        
+        /* 語音和方向按鈕的樣式 */
+        .btn-toggle { background-color: #90A4AE; color: white; }
+        .btn-toggle.active { background-color: #29B6F6; }
+        .btn-toggle:hover { background-color: #607D8B; }
+
+        /* 列印專用設定 - 針對 A4 優化 */
+        @media print {
+            @page { size: A4 portrait; margin: 1cm; }
+            body { background-color: white; padding: 0; margin: 0; }
+            .settings-panel, .controls, .deco { display: none !important; }
+            .paper-container {
+                box-shadow: none; border: none; width: 100%; max-width: 100%; padding: 0; margin: 0 auto;
+            }
+            .grid-wrapper { 
+                gap: 6px; /* 列印時稍微縮小間距 */
+                padding: 8px; /* 列印時稍微縮小 padding */
+                background-color: transparent; display: grid; width: 95%;
+            }
+            .cell {
+                width: auto; height: 50px; /* 列印時高度可調整 */
+                aspect-ratio: 1 / 1; 
+                font-size: 20px; /* 列印時字體大小 */
+                border-width: 1.5px; /* 列印時邊框粗細 */
+                -webkit-print-color-adjust: exact; print-color-adjust: exact;
+                page-break-inside: avoid; box-shadow: none;
+            }
+            .cell.empty { border-color: #aaa; border-style: dashed;}
+            h1 { font-size: 26px; margin-bottom: 12px; color: #333 !important;}
+            p.instruction { font-size: 15px; margin-bottom: 18px; color: #666 !important;}
+            .student-info { margin-bottom: 25px; color: #333 !important; gap: 30px;}
+        }
+
+        /* 針對小螢幕（例如手機）進一步優化 */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .settings-panel { 
+                padding: 10px 15px; 
+                gap: 10px; 
+                flex-direction: column; /* 在小螢幕上垂直排列設定選項 */
+                align-items: stretch;
+            }
+            .input-group { flex-direction: row; justify-content: space-between; align-items: center; }
+            input[type="number"] { width: 60px; font-size: 15px; padding: 6px; }
+
+            .paper-container { padding: 25px 15px; border-radius: 20px; }
+            h1 { font-size: 24px; margin-bottom: 10px; }
+            p.instruction { font-size: 14px; margin-bottom: 20px; }
+            .student-info { flex-direction: column; gap: 15px; margin-bottom: 25px; font-size: 16px;}
+            .student-info span { min-width: unset; width: 100%; text-align: left; }
+
+            .grid-wrapper { padding: 10px; gap: 5px; }
+            .cell { font-size: 16px; min-width: 30px; min-height: 30px; border-radius: 8px; }
+            .controls { flex-wrap: wrap; gap: 10px; margin-top: 20px; padding-bottom: 10px; }
+            button { padding: 8px 15px; font-size: 14px; border-radius: 30px; }
+
+            .deco { font-size: 2rem; }
+            .deco-1 { top: -15px; left: -15px; }
+            .deco-2 { top: -15px; right: -15px; }
+            .deco-3 { bottom: -8px; left: 10px; font-size: 1.5rem;}
+            .deco-4 { bottom: -8px; right: 10px; font-size: 1.5rem;}
+        }
+    </style>
+</head>
+<body>
+
+    <div class="settings-panel">
+        <div class="input-group">
+            <label for="startInput">起始 (Start)</label>
+            <input type="number" id="startInput" value="77" min="1" max="200">
+        </div>
+        <div class="input-group">
+            <label for="endInput">結束 (End)</label>
+            <input type="number" id="endInput" value="156" min="1" max="200">
+        </div>
+        <button class="btn-update" onclick="generateGrid()">✨ 建立表格</button>
+        <button class="btn-toggle active" id="voiceToggle" onclick="toggleVoice()">🔊 語音：開</button>
+        <button class="btn-toggle active" id="directionToggle" onclick="toggleDirection()">📈 方向：正數</button>
+    </div>
+
+    <div class="paper-container">
+        <div class="deco deco-1">🐻</div>
+        <div class="deco deco-2">🐰</div>
+        <div class="deco deco-3">⭐</div>
+        <div class="deco deco-4">🌟</div>
+
+        <h1 id="chartTitle">數數小挑戰 (進位大考驗)</h1>
+        
+        <div class="student-info">
+            <div>班級：<span></span></div>
+            <div>姓名：<span></span></div>
+        </div>
+
+        <p class="instruction" id="instructionText">小偵探，特別注意「9跳到0」的地方喔！(點擊格子可以聽聲音)</p>
+
+        <div class="grid-wrapper" id="numberGrid">
+            </div>
+    </div>
+
+    <div class="controls">
+        <button class="btn-regen" onclick="generateGrid()">🔄 重新隨機 (9和0保持挖空)</button>
+        <button class="btn-print" onclick="window.print()">🖨️ 列印 A4</button>
+    </div>
+
+    <script>
+        // --- 語音功能設定 ---
+        let isVoiceEnabled = true;
+        const synth = window.speechSynthesis;
+
+        function toggleVoice() {
+            isVoiceEnabled = !isVoiceEnabled;
+            const btn = document.getElementById('voiceToggle');
+            if (isVoiceEnabled) {
+                btn.textContent = "🔊 語音：開";
+                btn.classList.add('active');
+            } else {
+                btn.textContent = "🔇 語音：關";
+                btn.classList.remove('active');
+                synth.cancel();
+            }
+        }
+
+        function speakNumber(number, cellElement) {
+            if (!isVoiceEnabled || !synth) return;
+            synth.cancel();
+            document.querySelectorAll('.cell.speaking').forEach(c => c.classList.remove('speaking'));
+            const utterance = new SpeechSynthesisUtterance(number.toString());
+            utterance.lang = 'zh-TW';
+            utterance.rate = 0.9;
+            utterance.onstart = function() { cellElement.classList.add('speaking'); };
+            utterance.onend = function() { cellElement.classList.remove('speaking'); };
+            synth.speak(utterance);
+        }
+
+        // --- 數數方向設定 ---
+        let isAscending = true; // 預設為正數
+        const instructionText = document.getElementById('instructionText');
+
+        function toggleDirection() {
+            isAscending = !isAscending;
+            const btn = document.getElementById('directionToggle');
+            if (isAscending) {
+                btn.textContent = "📈 方向：正數";
+                btn.classList.add('active');
+                instructionText.textContent = "小偵探，特別注意「9跳到0」的地方喔！(點擊格子可以聽聲音)";
+            } else {
+                btn.textContent = "📉 方向：倒數";
+                btn.classList.remove('active');
+                instructionText.textContent = "小偵探，特別注意「0退到9」的地方喔！(點擊格子可以聽聲音)";
+            }
+            // 切換方向後，自動重新生成表格
+            generateGrid(); 
+        }
+
+        // --- 表格生成邏輯 ---
+        function generateGrid() {
+            const grid = document.getElementById('numberGrid');
+            const title = document.getElementById('chartTitle');
+            const startInput = document.getElementById('startInput');
+            const endInput = document.getElementById('endInput');
+
+            let startNum = parseInt(startInput.value);
+            let endNum = parseInt(endInput.value);
+
+            // 防呆驗證
+            if (isNaN(startNum) || startNum < 1) { startNum = 1; startInput.value = 1; }
+            if (isNaN(endNum) || endNum > 200) { endNum = 200; endInput.value = 200; }
+            
+            // 根據方向調整起始和結束數字，並給予提示
+            if (isAscending) { // 正數
+                if (startNum > endNum) {
+                    alert("正數模式下，起始數字不能比結束數字大喔！已自動修正。");
+                    endNum = startNum + 19;
+                    if (endNum > 200) endNum = 200;
+                    endInput.value = endNum;
+                }
+            } else { // 倒數
+                if (startNum < endNum) {
+                    alert("倒數模式下，起始數字必須比結束數字大喔！已自動修正。");
+                    startNum = endNum + 19; 
+                    if (startNum > 200) startNum = 200;
+                    startInput.value = startNum;
+                }
+            }
+            
+            // 計算總格子數
+            const totalCells = Math.abs(endNum - startNum) + 1;
+
+            // 更新標題
+            const directionText = isAscending ? "正數" : "倒數";
+            title.textContent = `數數小挑戰 (${directionText}進位大考驗)：從 ${startNum} 數到 ${endNum}`;
+            grid.innerHTML = ''; 
+
+            for (let i = 0; i < totalCells; i++) {
+                let currentNum;
+                if (isAscending) {
+                    currentNum = startNum + i;
+                } else { // 倒數
+                    currentNum = startNum - i;
+                }
+                
+                const cell = document.createElement('div');
+                
+                // --- 挖空邏輯 ---
+                const endsIn9 = currentNum % 10 === 9; 
+                const endsIn0 = currentNum % 10 === 0; 
+                const isStartOrEnd = (i === 0 || i === totalCells - 1);
+
+                let cellType = 'filled'; 
+
+                // 規則 1 (最高優先級): 如果個位數是 9 或 0，強制挖空
+                if (endsIn9 || endsIn0) {
+                    cellType = 'empty';
+                }
+                // 規則 2: 其他數字，保留起點和終點作為錨點(如果它們不是9或0)
+                else if (isStartOrEnd) {
+                    cellType = 'filled';
+                }
+                // 規則 3: 剩下的中間數字，隨機挖空 (機率 30%)
+                else if (Math.random() < 0.3) {
+                    cellType = 'empty';
+                }
+
+                // 應用樣式並綁定語音
+                if (cellType === 'empty') {
+                    cell.className = 'cell empty';
+                    cell.onclick = function() { speakNumber(currentNum, this); };
+                } else {
+                    cell.className = 'cell filled';
+                    cell.textContent = currentNum;
+                    cell.onclick = function() { speakNumber(currentNum, this); };
+                }
+
+                grid.appendChild(cell);
+            }
+        }
+
+        window.onload = function() {
+             generateGrid();
+             synth.getVoices();
+        };
+        
+    </script>
+</body>
+</html>
